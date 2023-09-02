@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Overlay with Croppie</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css">
+    <style>
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('overlay.png');
+            background-repeat: no-repeat;
+            background-size: contain;
+            background-position: center;
+            opacity: 0.4;  /* 透明度を調整 */
+            pointer-events: none; /* これにより、オーバーレイがユーザーの操作を妨げないようになります */
+            z-index: 10; /* オーバーレイを前面に表示 */
+        }
+    </style>
+</head>
+<body>
+
+<input type="file" id="upload">
+<div id="editor" style="position: relative; width: 300px; height: 300px;">
+    <div id="overlay"></div>
+</div>
+<button id="rotateButton">Rotate</button>
+<button id="downloadButton">Download Image</button>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
+<script>
+    const uploadInput = document.getElementById('upload');
+    const editor = document.getElementById('editor');
+    const rotateButton = document.getElementById('rotateButton');
+    let croppie = null;
+
+    uploadInput.addEventListener('change', function () {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            if (croppie !== null) {
+                croppie.destroy();
+            }
+
+            croppie = new Croppie(editor, {
+                viewport: { width: 126, height: 270 },
+                boundary: { width: 160, height: 300 },
+                showZoomer: false,
+                enableOrientation: true
+            });
+
+            croppie.bind({
+                url: e.target.result
+            });
+        }
+        reader.readAsDataURL(this.files[0]);
+    });
+
+    rotateButton.addEventListener('click', function() {
+        if (croppie) {
+            croppie.rotate(90);
+        }
+    });
+
+    document.getElementById('downloadButton').addEventListener('click', function() {
+        croppie.result({
+            type: 'blob',
+            size: 'original'
+        }).then(function(blob) {
+            const imageUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = imageUrl;
+            a.download = 'cropped_image.png'; // ダウンロードされるファイル名
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+    });
+
+</script>
+</body>
+</html>
